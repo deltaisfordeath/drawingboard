@@ -1,0 +1,29 @@
+.drawing {
+    position: absolute;
+    transform: translate(-50%, -50%);
+}
+
+.drawing.selected {
+    border: 3px solid salmon;
+}
+
+.drawing-text {
+    position: absolute;
+    top: 0;
+    left: 5px;
+    pointer-events: none;
+}
+
+.drawing-text div {
+    white-space: nowrap;
+}
+
+svg {
+    position: absolute;
+}
+
+rect {
+    fill: none; 
+    stroke: white; 
+    stroke-width: 4px;
+}
