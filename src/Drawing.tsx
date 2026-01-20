@@ -16,10 +16,8 @@ const Drawing = observer(({drawing}: DrawingProps) => {
     const isSelected = root.drawings.selectedDrawings.has(drawing.id ?? -1);
     const scaledWidth = root.boardState.scale * drawing.width;
     const scaledHeight = root.boardState.scale * drawing.height;
-    const {x, y} = root.boardState.boardToScreen(drawing.position);
 
-    const drawingX = x + (drawing.width - scaledWidth) / 2
-    const drawingY = y + (drawing.height - scaledHeight) / 2
+    const {x: drawingX, y: drawingY } = root.boardState.boardToScreen(drawing.position);
 
     function startDragging(e: React.MouseEvent) {
         e.stopPropagation();

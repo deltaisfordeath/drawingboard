@@ -81,7 +81,7 @@ export class BoardState {
   zoom(deltaY: number, mouseX: number, mouseY: number, rect: DOMRect) {
     const zoomSensitivity = 0.001;
     const delta = -deltaY * zoomSensitivity;
-    let newScale = this.scale + delta;
+    let newScale = this.scale + delta * 10;
 
     // Clamp
     newScale = Math.min(Math.max(newScale, this.MIN_SCALE), this.MAX_SCALE);
@@ -105,12 +105,14 @@ export class BoardState {
     this.scale = newScale;
   }
 
-  zoomIn() {
-    this.scale = Math.min(this.scale + 0.5, this.MAX_SCALE);
+  zoomIn(rect?: DOMRect) {
+    if (!rect) return;
+    this.zoom(-5, this.boardPos.x, this.boardPos.y, rect)
   }
 
-  zoomOut() {
-    this.scale = Math.max(this.scale - 0.5, this.MIN_SCALE);
+  zoomOut(rect?: DOMRect) {
+    if (!rect) return;
+    this.zoom(5, this.boardPos.x, this.boardPos.y, rect);
   }
 
   screenToBoard(screenPos: Coordinate): Coordinate {
@@ -132,12 +134,12 @@ export class BoardState {
     // Main Drawing Logic
   draw = (canvas: HTMLCanvasElement | null) => {
     if (!canvas) return;
-
+    
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     const { width, height } = this.size;
     const { x: offsetX, y: offsetY } = this.boardPos;
-    const scale = this.scale;
+    const scale = this.scale / 10;
 
     // Clear Screen
     ctx.clearRect(0, 0, width, height);
@@ -147,6 +149,7 @@ export class BoardState {
     ctx.fillRect(0, 0, width, height);
 
     const scaledGridSize = 20 + (this.GRID_SIZE * scale) % 20;
+    const scaleMultiple = Math.floor(this.GRID_SIZE * scale) / 20;
 
     // Calculate visible grid range
     // We start drawing from slightly before the left/top edge to ensure continuity
@@ -195,6 +198,8 @@ export class BoardState {
         const realVal = isVertical 
           ? (i - offsetX) / scaledGridSize 
           : (i - offsetY) / scaledGridSize;
+
+          console.log(scaledGridSize, scaleMultiple);
         
         const roundedIndex = Math.round(realVal);
         const isMajor = Math.abs(realVal - roundedIndex) < 0.1 && roundedIndex % this.MAJOR_GRID_STEP === 0;
@@ -205,7 +210,8 @@ export class BoardState {
           
           // --- DRAW TEXT LABELS ---
           // We multiply by the grid size to show "world coordinates"
-          const labelValue = roundedIndex * this.GRID_SIZE / 10; 
+          const zoomMultiple = Math.floor(scaleMultiple * 10) / 10;
+          const labelValue = (roundedIndex * this.GRID_SIZE / 10) / zoomMultiple;
           
           // Skip labeling 0 if you want to avoid cluttering the blue origin marker
           if (labelValue !== 0) {

@@ -8,7 +8,7 @@ import { type DrawingType, type Coordinate } from './classes/Drawings';
 
 const InfiniteGrid = observer(() => {
   const canvasRef:React.RefObject<HTMLCanvasElement | null> = useRef(null);
-  const containerRef = useRef(null);
+  const containerRef:React.RefObject<HTMLDivElement | null> = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startDrawingPos, setStartDrawingPos] = useState<Coordinate | null>(null);
   const [tempDrawing, setTempDrawing] = useState<DrawingType | null>(null);
@@ -19,9 +19,8 @@ const InfiniteGrid = observer(() => {
       e.stopPropagation();
       e.preventDefault();
 
-      const zoomSensitivity = 0.001;
+      const zoomSensitivity = 0.005;
       const delta = -e.deltaY * zoomSensitivity;
-      const newScale = root.boardState.scale + delta;
 
       // Zoom towards mouse pointer logic
       // TODO: Fix this logic to keep mouse centered on zoom
@@ -39,8 +38,7 @@ const InfiniteGrid = observer(() => {
       const newX = mouseX - worldX;
       const newY = mouseY - worldY;
 
-      root.boardState.setPosition(newX, newY);
-      root.boardState.setScale(newScale);
+      root.boardState.zoom(delta, newX, newY, rect);
 
   }, [canvasRef]);
 
@@ -54,11 +52,17 @@ const InfiniteGrid = observer(() => {
   useEffect(() => {
     // autorun will call 'draw' immediately, and then again whenever
     // any observable accessed inside 'draw' changes.
+    
     const disposer = autorun(() => {
         root.boardState.draw(canvasRef.current);
     });
 
     if (!containerRef.current) return;
+
+    root.boardState.setPosition(
+      containerRef.current?.offsetWidth / 2, 
+      containerRef.current?.offsetHeight / 2,
+    );
 
     const handleResize = () => {
       if (containerRef.current && canvasRef.current) {
@@ -169,7 +173,7 @@ const InfiniteGrid = observer(() => {
       {/* Bottom Controls */}
       <div className="kennyboard-toolbar">
         <button 
-          onClick={() => root.boardState.setScale(root.boardState.scale - 0.5)}
+          onClick={() => root.boardState.zoomOut(canvasRef.current?.getBoundingClientRect())}
           className="toolbar-button"
           title="Zoom Out"
         >
@@ -189,7 +193,7 @@ const InfiniteGrid = observer(() => {
         <div />
 
         <button 
-          onClick={() => root.boardState.setScale(root.boardState.scale + 0.5)}
+          onClick={() => root.boardState.zoomIn(canvasRef.current?.getBoundingClientRect())}
           className="toolbar-button"
           title="Zoom In"
         >
